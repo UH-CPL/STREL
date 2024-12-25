@@ -1612,7 +1612,7 @@ i.plot.behav <- ggpredict(stress_logit_model_s,
   scale_color_manual(values = c("gray", "red", "black")) +
   my_theme3 + 
   coord_cartesian(ylim = c(0.2, 1)) +  
-  scale_x_discrete(labels = c("Work", "NonWork", "Driving")) +
+  scale_x_discrete(labels = c("WRK", TeX(r'($\neg$WRK)'), "DRV")) +
   scale_y_continuous(labels = scales::percent)  +
   labs(x = "", y = TeX(r'($\textit{P(S)}$)'))
 
@@ -1630,21 +1630,9 @@ i.plot.cdn <-  ggpredict(stress_logit_model_s, "Cadence[all]") %>%
   coord_cartesian(ylim = c(0.2, 1)) + 
   scale_y_continuous(labels = scales::percent) +
   #remove y axis labels
-  labs(x = TeX(r'($\textit{CDN} \ \[SPM/2\]$)'), y = "")   + theme(axis.text.y = element_blank()) 
+  labs(x = TeX(r'($\mu\textit{CDN} \ \[SPM/2\]$)'), y = "")   + theme(axis.text.y = element_blank()) 
 
-i.plot.paint <- ggpredict(stress_logit_model_s, "PA_AVG_INT[all]") %>%
-  ggplot(aes(x, predicted)) +
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
-  geom_line(colour = "orange", size = 2) +
-  geom_vline(
-    xintercept = mean(all.df3_OD$PA_AVG_INT),
-    linetype = "dashed",
-    color = "gray",
-    size = 1
-  ) +  my_theme3 +   coord_cartesian(ylim = c(0.3, 0.8)) +
-  scale_y_continuous(labels = scales::percent) +
-  labs(x = TeX(r'($\bar{\textit{PA}}_{\textit{int}} \ \[SPM/2\]$)'), y = TeX(r'($\textit{P(S)}$)'))
-
+# SLEEP
 i.plot.SDurationQ <- ggpredict(stress_logit_model_s, "Sleep_Time[all]") %>%
   ggplot(aes(x, predicted)) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
@@ -1654,7 +1642,7 @@ i.plot.SDurationQ <- ggpredict(stress_logit_model_s, "Sleep_Time[all]") %>%
     linetype = "dashed",
     color = "gray",
     size = 1
-  ) +  my_theme3 + coord_cartesian(ylim = c(0.3, 0.8)) +  
+  ) +  my_theme3 + coord_cartesian(ylim = c(0.2, 1)) +  
   scale_y_continuous(labels = scales::percent) +
   labs(x = TeX(r'($\textit{SLEEP} \ \[HR\]$)'), y = "") + theme(axis.text.y = element_blank()) 
 ```
@@ -1671,33 +1659,22 @@ p_a <- cowplot::plot_grid(
   label_size = 13
 ) 
 
-p_bc <- cowplot::plot_grid(
-  i.plot.behav, i.plot.cdn, 
+p_bcd <- cowplot::plot_grid(
+  i.plot.behav, i.plot.cdn, i.plot.SDurationQ,
   nrow = 1,
-  scale = c(.97, .97),
-  labels = c("a2", "a3"),
+  scale = c(0.97, .97, .97),
+  labels = c("a2", "a3", "a4"),
   label_size = 13
 )
 
-p_de <- cowplot::plot_grid(
-  i.plot.paint, i.plot.SDurationQ,
-  nrow = 1,
-  scale = c(0.97, 0.97),
-  labels = c("a4", "a5"),
-  label_size = 13
-)
-
-final.w.legend <- cowplot::plot_grid(p_a, p_bc, mylegend, p_de,
-  nrow = 4,
-  rel_heights = c(1, 1, 0.2, 1)
+final.w.legend <- cowplot::plot_grid(p_a, p_bcd, mylegend,
+  nrow = 3,
+  rel_heights = c(1.0, 1.0, 0.2)
 )
 
 final.w.legend
 
-
 # save the plot
-#ggsave("HR-Stress-Model-Plots.pdf", final.w.legend, width = 5.5, height = 8, dpi = 300)
-
 plot_file = paste0(plot_dir, "HR-Stress-Model-Plots.pdf")
 ggsave(plot_file, final.w.legend, width = 5.5, height = 8, dpi = 300)
 
