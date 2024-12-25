@@ -377,18 +377,18 @@ activity4_classification_plots_4CH <- function(P_ID, isSave = F, file_suffix = "
 #### Save the plots for Activity4 Labeling - activity4_classification_plots_4CH
 # Save the plots - CHOOSE
 file_suffix = "5_min"
-P_ID = "T022"
+#P_ID = "T022"
 
-activity4_classification_plots_4CH(P_ID = P_ID, file_suffix, isSave = T)
+#activity4_classification_plots_4CH(P_ID = P_ID, file_suffix, isSave = T)
 
 
-# all_ID_list = sprintf("T%03d", c(1:12,14:25)) # T013 dropped
-# 
-# ## Save plots for given subjects
-# for (P_ID in all_ID_list) {
-#   print(P_ID)
-#   activity4_classification_plots_4CH(P_ID = P_ID, file_suffix= "5_min", isSave = T)
-# }
+all_ID_list = sprintf("T%03d", c(1:12,14:25)) # T013 dropped
+
+## Save plots for given subjects
+for (P_ID in all_ID_list) {
+  print(P_ID)
+  activity4_classification_plots_4CH(P_ID = P_ID, file_suffix= "5_min", isSave = T)
+}
 
 
 
