@@ -308,6 +308,8 @@ all.df3$Day <- relevel(all.df3$Day, ref = "CD")
 ### Calculate PA_AVG_INT
 
 ```{r ActivityGroupingStressLabeling, echo=FALSE}
+library(psych)
+
 All_Summary <- all.df3 %>% 
   group_by(Participant, Day) %>%
   summarise(n = sum(Activity4 == "Work", Activity4 == "NonWork", Activity4 == "Driving", Activity4 == "Running" | Activity4 == "Walking" | Activity4 == "Biking", na.rm = TRUE), PA_Percent = sum(Activity4 == "Walking" | Activity4 == "Running" | Activity4 == "Biking", na.rm = TRUE) *100 / n
@@ -325,6 +327,10 @@ PA_Summary = all.df3 %>%
   summarise(
     PA_AVG_INT = round(mean(Cadence, na.rm=TRUE),1) # mean Cadence per day per subject
   ) 
+
+PA_Summary
+
+describe(PA_Summary)
 
 All_Summary2 = merge(All_Summary, PA_Summary, by = c("Participant", "Day"), all.x = T) 
 
@@ -351,6 +357,8 @@ all.df3_OD <- all.df3_OD %>%
   )
 
 all.df3_OD$Stress <- as.factor(all.df3_OD$Stress)
+
+detach("package:psych", unload=TRUE)
 ```
 
 ## Participant and Day Table
@@ -758,7 +766,9 @@ detach("package:psych", unload=TRUE)
 
 ## Plot Cadence PDF
 ```{r}
-plot_cadence_pdf <- all.df3 %>%
+library(psych)
+
+plot_cadence_pdf <- all.df3 %>% filter(!is.na(Cadence)) %>%
   filter(!is.na(PA_Activity)) %>%
   ggplot(aes(x = Cadence, fill = PA_Activity)) +
   geom_density(alpha = 0.6) +
@@ -775,8 +785,15 @@ plot_cadence_pdf <- all.df3 %>%
        ) +theme(legend.position = c(0.8, 0.8), #"top",
                   legend.box.margin = margin(0, -1, 0, 0))
 
-
 print(plot_cadence_pdf)
+
+all.df3 %>% filter(!is.na(Cadence)) %>%
+ filter(PA_Activity == "PA") %>%   filter(!is.na(PA_Activity)) %>% describe()
+
+all.df3 %>% filter(!is.na(Cadence)) %>%
+ filter(PA_Activity == "Sedentary") %>%   filter(!is.na(PA_Activity)) %>% describe()
+
+detach("package:psych", unload=TRUE)
 ```
 
 
@@ -1284,26 +1301,26 @@ sleep_p13
 detach("package:psych", unload=TRUE)
 ```
 
-### PA AVG INTENSITY Plot
+### mCadence Plot
 ```{r echo=FALSE}
 library(psych)
 
 describe(all.df3_OD)
 
-PA_AVG_INT_p1 = all.df3_OD %>%
-  filter(!is.na(PA_AVG_INT)) %>%
+mCadence_p1 = all.df3_OD %>%
+  #filter(!is.na(PA_AVG_INT)) %>%
   #distinct() %>%
-  ggplot(aes(x=PA_AVG_INT)) +
+  ggplot(aes(x=Cadence)) +
   geom_density(fill = "black") +
   my_theme1 +
   theme(legend.position = "top") +
-   labs(x = TeX(r'($\textit{\bar{PA}_{int}} \ \[SPM/2\]$)'),
+   labs(x = TeX(r'($\textit{mCadence} \ \[SPM/2\]$)'),
        y = "PDF",
        fill = ""
        ) +theme(legend.position = c(0.8, 0.8), #"top",
                   legend.box.margin = margin(0, -1, 0, 0))
 
-PA_AVG_INT_p1
+mCadence_p1
 
 detach("package:psych", unload=TRUE)
 ```
@@ -1313,7 +1330,7 @@ detach("package:psych", unload=TRUE)
 ```{r echo=FALSE}
 candece_p1 = all.df3_OD %>%
   dplyr::select(Participant, Day, Cadence) %>%
-  distinct() %>%
+  #distinct() %>%
   group_by(Participant, Day) %>%
   ggplot(aes(x= Day, y = Cadence, fill = Day)) +
  geom_boxplot()+
@@ -1326,7 +1343,7 @@ candece_p1 = all.df3_OD %>%
 
 candece_p2 = all.df3_OD %>%
   dplyr::select(Participant, Day, Cadence, Profession) %>%
-  distinct() %>%
+  #distinct() %>%
   group_by(Participant, Day) %>%
   ggplot(aes(x= Day, y = Cadence, fill = Profession)) +
  geom_boxplot()+
