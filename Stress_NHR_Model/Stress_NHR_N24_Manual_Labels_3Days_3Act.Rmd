@@ -144,7 +144,8 @@ mylegend <- ggpubr::get_legend(Legend_Plot)
 #file <- "../All_Curated_Demog_Activity_Sleep5_min_N24-Manually-Labeled-FINAL_HRV.csv"
 
 data_dir = "../data/"
-file <- "All_Curated_Demog_Activity_Sleep5_min_N24-Manually-Labeled-FINAL_Activity4.csv"
+#file <- "All_Curated_Demog_Activity_Sleep5_min_N24-Manually-Labeled-FINAL_Activity4.csv"
+file <- "All_Curated_Demog_Activity_Sleep5_min_N24-Manually-Labeled-FINAL_Activity4_Index.csv"
 
 all.df2 = read.csv(paste0(data_dir, file), stringsAsFactors = T)
 
