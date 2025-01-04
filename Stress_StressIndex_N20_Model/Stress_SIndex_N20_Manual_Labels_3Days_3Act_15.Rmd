@@ -228,10 +228,6 @@ levels(all.df2$Sleep_label)
 print(table(all.df2$Activity4, all.df2$ID))
 print(table(all.df2$Activity4, all.df2$ID, all.df2$Day_label))
 
-
-
-
-
 ```
 
 
@@ -460,7 +456,7 @@ summary_data
  my_theme1 +
  scale_x_continuous(breaks = seq(-10, 40, by = 10)) +
  theme(legend.position = "none") +
- labs(x = TeX(r'(\textit{NHR} \[BPM\])'), y = "Frequency") +
+ labs(x = TeX(r'(\textit{StressIndex})'), y = "Frequency") +
  geom_vline(aes(xintercept = HR_Mean_nPA), color = "blue", linetype = 3, linewidth = 1) 
 
 # Create qq plots for T025 of Day
