@@ -1,5 +1,5 @@
 ---
-title: "Stress Model NHRV (3 digits) | N = 20 | 5 min | Thresh = mean \n | Manual Intervention of Activity Classification"
+title: "Stress Model NHRV | N = 20 | 5 min | Thresh = mean \n | Manual Intervention of Activity Classification"
 author: "Field Lab |  ACDC Lab"
 date: "`r Sys.Date()`"
 output:
@@ -158,10 +158,6 @@ all.df2 <- all.df2 %>%
   filter(!is.na(Time)) %>%
   mutate(Day_label = as.character(Day_label)) 
 
-# #Remove T0017 DC1.3 is the sleep data of CD. Since the
-# all.df2 <- all.df2 %>%
-#   filter(!(ID == "T017" & subDC == "DC1.3")) 
-
 # for ID = T017, if the Time has "3/29/24" then Day_label = "CD"
 all.df2$Day_label <- ifelse(all.df2$ID == "T017" & all.df2$subDC == "DC1.3" & grepl("3/29/24", all.df2$Time), "CD", all.df2$Day_label)
 
@@ -193,6 +189,7 @@ all.df2 <- all.df2 %>%
 all.df2$Activity4 <- factor(all.df2$Activity4, 
                           levels = c("Work", "NonWork", "Walking", "Running", "Biking", "Driving", "Unknown", "Sleeping"))
 
+print(table(all.df2$Activity4, all.df2$ID, all.df2$Day_label))
 ```
 
 
@@ -239,7 +236,7 @@ all.df3_OD <- all.df2%>%
   filter(Activity4 %in% c("Work", "NonWork", "Driving")) %>%
   droplevels()
 
-#table(all.df3_OD$ID, all.df3_OD$Day_label, all.df3_OD$Activity4)
+table(all.df3_OD$ID, all.df3_OD$Day_label, all.df3_OD$Activity4)
 ```
 
 ```{r PsychDataReading, include=FALSE}
@@ -379,24 +376,38 @@ all.df3_OD$Stress <- as.factor(all.df3_OD$Stress)
 
 
 
-## Participant and Day Table
+## Participant and Activity4 Table
 ```{r}
-table(all.df3_OD$Participant, all.df3_OD$Day)
+table(all.df3_OD$Participant, all.df3_OD$Activity4)#, all.df3_OD$Day)
 ```
-
 
 
 ```{r eval=FALSE, include=FALSE}
 # Save as csv file
-#write.csv(all.df3_OD, "../Stress_model_data_OH_DR_N24.csv", row.names = F)
-#write.csv(all.df3_OD, "../Stress_model_data_OH_DR_HRV_N24.csv", row.names = F)
-#write.csv(all.df3_OD, "../Stress_model_data_OH_DR_NHRV_N24.csv", row.names = F)
-names(all.df3_OD)
-
+#write.csv(all.df3_OD, "../Stress_NHRV_model_data_OH_DR_N20.csv", row.names = F)
 ```
 
 
 ## Step 1 - Generate Stress/No-Stress Labels
+
+
+### Select Subjects for Analysis
+
+```{r}
+
+Selected_P_IDs = sprintf("T%03d", 1:25)
+Selected_P_IDs = Selected_P_IDs[-c(1,9,11,19)]
+
+
+all.df3_OD <- all.df3_OD %>%
+  filter(Participant %in% Selected_P_IDs ) %>%
+  droplevels()
+
+
+table(all.df3_OD$Participant, all.df3_OD$Activity4)#, all.df3_OD$Day)
+
+```
+
 
 ## Distrubution of NHRV in Driving and Office.Home
 
@@ -405,11 +416,26 @@ names(all.df3_OD)
 all.df3_OD %>%
   filter(Activity3 %in% c("Office.Home", "Driving")) %>%
   ggplot(aes(x = NRR, fill = Activity4)) +
-  geom_density(alpha = 1) +
+  geom_density(alpha = 0.7) +
   my_theme1 +
   theme(legend.position = "top") +
   labs(x = TeX(r'($\NRR \[ms\])'),
        y = "PDF")
+
+summary_data <- all.df3_OD %>%
+  dplyr::group_by(Participant, Day) %>%
+  dplyr::summarize(
+    Mean_NRR = mean(NRR, na.rm = TRUE),
+    SD_NRR = sd(NRR, na.rm = TRUE),
+    Mean_PA_Percent = mean(PA_Percent, na.rm = TRUE),
+    SD_PA_Percent = sd(PA_Percent, na.rm = TRUE),
+    Mean_PA_AVG_INT = mean(PA_AVG_INT, na.rm = TRUE),
+    SD_PA_AVG_INT = sd(PA_AVG_INT, na.rm = TRUE),
+    Count = n(), # Number of observations
+    .groups = "drop" # Prevent grouped output
+  )
+
+summary_data
 
 ```
 
@@ -417,24 +443,24 @@ all.df3_OD %>%
 ## T025 - Stress Threshold Visualization, QQPlots, Table
 ```{r stress_threshold_viz_t001, echo=FALSE, fig.height=4, fig.width=4}
 
-# Create a complete grid of Participant and Day combinations
-complete_grid <- expand_grid(
-  Participant = sprintf("T%03d", 1:25), 
-  Day = c("CD", "WD", "OD")
-)
-
-complete_grid$Day = factor(complete_grid$Day, levels = c("CD", "WD", "OD"))
-
+# # Create a complete grid of Participant and Day combinations
+# complete_grid <- expand_grid(
+#   Participant = sprintf("T%03d", 1:25), 
+#   Day = c("CD", "WD", "OD")
+# )
+# 
+# complete_grid$Day = factor(complete_grid$Day, levels = c("CD", "WD", "OD"))
+# 
 mult_format <- function() {
-     function(x) format(100*x,digits = 2) 
+     function(x) format(100*x,digits = 2)
 }
-
-# Ensure all combinations are present in the data
-all_df3_complete <- complete_grid %>%
-  left_join(all.df3_OD, by = c("Participant", "Day"))
+# 
+# # Ensure all combinations are present in the data
+# all_df3_complete <- complete_grid %>%
+#   left_join(all.df3_OD, by = c("Participant", "Day"))
 
 # T025
-plot_stress_distr <- all_df3_complete %>% 
+plot_stress_distr <- all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 25) ) %>%
   ggplot(aes(x = NRR, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -448,7 +474,7 @@ plot_stress_distr <- all_df3_complete %>%
 
 
 # Create qq plots for T025 of Day
-plot_stress_qq <- all_df3_complete %>% 
+plot_stress_qq <- all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 25) ) %>%
   ggplot(aes(sample = NRR)) +
   geom_qq() +
@@ -491,7 +517,7 @@ detach("package:psych", unload=TRUE)
 
 ```{r stress_threshold_viz, echo=FALSE, fig.height=11, fig.width=11}
 # T001, T002, T003, T004, T005, T006
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 1:6) ) %>%
   ggplot(aes(x = NRR, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -506,7 +532,7 @@ all_df3_complete %>%
 
 
 
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 1:6) ) %>%
   ggplot(aes(sample = NRR)) +
   geom_qq() +
@@ -521,7 +547,7 @@ all_df3_complete %>%
 
 ```{r stress_threshold_viz2, echo=FALSE, fig.height=11, fig.width=11}
 # T007, T008, T009, T010, T011, T012
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 7:12) ) %>% 
   ggplot(aes(x = NRR, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -535,7 +561,7 @@ all_df3_complete %>%
   geom_vline(aes(xintercept = NHRV_Mean_nPA), color = "blue", linetype = 3, linewidth = 1) 
 
 
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 7:12) ) %>% 
   ggplot(aes(sample = NRR)) +
   geom_qq() +
@@ -551,7 +577,7 @@ all_df3_complete %>%
 
 ```{r stress_threshold_viz3, echo=FALSE, fig.height=11, fig.width=11}
 # T013, T014, T015, T016, T017, T018
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 14:18) ) %>% 
   ggplot(aes(x = NRR, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -565,7 +591,7 @@ all_df3_complete %>%
   geom_vline(aes(xintercept = NHRV_Mean_nPA), color = "blue", linetype = 3, linewidth = 1) 
 
 
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 14:18) ) %>% 
   ggplot(aes(sample = NRR)) +
   geom_qq() +
@@ -581,7 +607,7 @@ all_df3_complete %>%
 
 ```{r stress_threshold_viz4, echo=FALSE, fig.height=11, fig.width=11}
 # T019, T020, T021, T022, T023, T024, T025
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 19:25) ) %>% 
   ggplot(aes(x = NRR, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -595,7 +621,7 @@ all_df3_complete %>%
   geom_vline(aes(xintercept = NHRV_Mean_nPA), color = "blue", linetype = 3, linewidth = 1) 
 
 
-all_df3_complete %>% 
+all.df3_OD %>% 
   filter(Participant %in% sprintf("T%03d", 19:25) ) %>% 
   ggplot(aes(sample = NRR)) +
   geom_qq() +
@@ -613,7 +639,7 @@ all_df3_complete %>%
 
 ### PA_Percent Plot
 ```{r echo=FALSE}
-plot_PA_Percent = all_df3_complete %>%
+plot_PA_Percent = all.df3_OD %>%
   group_by(Participant, Day) %>%
   dplyr::select(Participant,Day,PA_Percent) %>%
   distinct() %>%
@@ -635,7 +661,7 @@ geom_boxplot() +
 
 ```{r echo=FALSE}
 
-all_df3_complete %>%
+all.df3_OD %>%
   group_by(Participant, Day) %>%
   dplyr::select(Participant,Day,PA_Percent, PA_AVG_INT) %>%
   distinct() 
@@ -746,25 +772,6 @@ all.df3_OD %>%
 \newpage
 
 # Step 2 - Regress on Stress/No-Stress
-
-## Selected Participants 
-```{r echo=FALSE}
-
-Selected_P_IDs = sprintf("T%03d", 1:25)
-# exclude T001, T002, T005, T009, T011, T019, T021
-# exclude T001, T009, T011, T019
-Selected_P_IDs = Selected_P_IDs[-c(1,9,11,19)]
-
-#Selected_P_IDs
-
-all.df3_OD <- all.df3_OD %>%
-  filter(Participant %in% Selected_P_IDs) %>%
-  droplevels()
-
-
-table(all.df3_OD$Participant, all.df3_OD$Day)
-```
-
 
 ## Big 5 Box Plots
 
