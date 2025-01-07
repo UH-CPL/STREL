@@ -346,7 +346,8 @@ df_sedentAct <- df_sedentAct %>%
   mutate(
     Stress = ifelse(HR_Normalized > NHR_0_2SD, "S", "NS"), # 0 + 2*SD is the threshold
     # percent of "S" in Stress
-    Stress_Percent = sum(Stress == "S", na.rm = TRUE) *100 / n()
+    Stress_Percent = sum(Stress == "S", na.rm = TRUE) *100 / n(),
+    NStress_Percent = sum(Stress == "NS", na.rm = TRUE) *100 / n(),
   )
 
 df_sedentAct$Stress <- as.factor(df_sedentAct$Stress)
@@ -570,12 +571,15 @@ plot_PA_Percent
 tmp_P_list = sprintf("T%03d", 1:6)
 
 df_sedentAct %>%
+  group_by(Participant, Day) %>%
   filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
     Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+    n_Stress = sum(Stress == "S"),
+    n = n(),
+    n_sum = sum(n),
+    prop = n_Stress / n_sum
+    #prop = n_Stress / n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -592,12 +596,15 @@ df_sedentAct %>%
 tmp_P_list = sprintf("T%03d", 7:12)
 
 df_sedentAct %>%
+  group_by(Participant, Day) %>%
   filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
     Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+    n_Stress = sum(Stress == "S"),
+    n = n(),
+    n_sum = sum(n),
+    prop = n_Stress / n_sum
+    #prop = n_Stress / n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -614,12 +621,15 @@ df_sedentAct %>%
 tmp_P_list = sprintf("T%03d", 14:18)
 
 df_sedentAct %>%
+  group_by(Participant, Day) %>%
   filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
     Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+    n_Stress = sum(Stress == "S"),
+    n = n(),
+    n_sum = sum(n),
+    prop = n_Stress / n_sum
+    #prop = n_Stress / n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -636,13 +646,15 @@ df_sedentAct %>%
 tmp_P_list = sprintf("T%03d", 19:25)
 
 df_sedentAct %>%
+  group_by(Participant, Day) %>%
   filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
-    # Filter participants and adjust factor levels to match the filtered dataset
     Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+    n_Stress = sum(Stress == "S"),
+    n = n(),
+    n_sum = sum(n),
+    prop = n_Stress / n_sum
+    #prop = n_Stress / n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
