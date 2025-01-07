@@ -538,6 +538,14 @@ df_sedentMultimodalForm %>%
 
 # PA_Percent Plot
 ```{r PA_Percent_Plot, echo=FALSE}
+df_sedentMultimodal %>%
+  group_by(Participant, Day) %>%
+  mutate(n_sedent = sum(Activity4 == "Work"| Activity4 == "NonWork"| Activity4 == "Driving", na.rm = TRUE),
+         n_stress = sum(Stress == "S", na.rm = TRUE),
+         ) %>%
+  dplyr::select(Participant, Day, nT, n_sedent, n_stress,Stress_Percent, PA_Percent) %>%
+  distinct()
+
 plot_PA_Percent = df_sedentMultimodal %>%
   group_by(Participant, Day) %>%
   dplyr::select(Participant,Day,PA_Percent) %>%
