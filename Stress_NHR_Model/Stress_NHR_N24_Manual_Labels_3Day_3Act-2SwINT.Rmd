@@ -437,7 +437,7 @@ df_sedentMultimodalForm %>%
   facet_wrap(~Participant+Day, ncol = 3) +
   my_theme1+
   theme(legend.position = "right") +
-  labs(title = "Normalized HR in Sedentary Activities, black line = 0+2SD, blue line = Median",
+  labs(title = "Normalized HR in Sedentary Activities, blue line = 0+2SD, black line = Median",
        x = TeX(r'($\Delta$HR \[BPM\])'), y = "Frequency") +
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
@@ -464,7 +464,7 @@ df_sedentMultimodalForm %>%
   facet_wrap(~Participant+Day, ncol = 3) +
   my_theme1+
   theme(legend.position = "right") +
-  labs(title = "Normalized HR in Sedentary Activities, black line = 0+2SD, blue line = Median",
+  labs(title = "Normalized HR in Sedentary Activities, blue line = 0+2SD, black line = Median",
        x = TeX(r'($\Delta$HR \[BPM\])'), y = "Frequency") +
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
@@ -492,7 +492,7 @@ df_sedentMultimodalForm %>%
   facet_wrap(~Participant+Day, ncol = 3) +
   my_theme1+
   theme(legend.position = "right") +
-  labs(title = "Normalized HR in Sedentary Activities, black line = 0+2SD, blue line = Median",
+  labs(title = "Normalized HR in Sedentary Activities, blue line = 0+2SD, black line = Median",
        x = TeX(r'($\Delta$HR \[BPM\])'), y = "Frequency") +
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
@@ -519,7 +519,7 @@ df_sedentMultimodalForm %>%
   facet_wrap(~Participant+Day, ncol = 3) +
   my_theme1+
   theme(legend.position = "right") +
-  labs(title = "Normalized HR in Sedentary Activities, black line = 0+2SD, blue line = Median",
+  labs(title = "Normalized HR in Sedentary Activities, blue line = 0+2SD, black line = Median",
        x = TeX(r'($\Delta$HR \[BPM\])'), y = "Frequency") +
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
