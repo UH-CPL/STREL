@@ -416,7 +416,7 @@ library(psych)
 
 df_sedentMultimodalForm %>%
   ungroup() %>%
-  filter(Participant %in% sprintf("T%03d", 1) ) %>%
+  filter(Participant %in% sprintf("T%03d", 25) ) %>%
   group_by(Day) %>%
   dplyr::select(Participant,Day, HR_Normalized, PA_Percent, PA_Intensity) %>%
   distinct() %>%
