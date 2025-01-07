@@ -257,7 +257,7 @@ unique(df_multimodal$Activity4)
 colSums(is.na(df_multimodal))
 
 # Assign proper names to the variables
-df_validMultimodal <- df_multimodal %>%
+df_multimodal <- df_multimodal %>%
   rename(
   Participant = ID,
   Day = Day_label,
@@ -266,7 +266,7 @@ df_validMultimodal <- df_multimodal %>%
   )
 
 # Remove Unknown activity from consideration
-df_validMultimodal <- df_validMultimodal %>% filter(Activity4 != "Unknown")
+df_validMultimodal <- df_multimodal %>% filter(Activity4 != "Unknown")
  
 df_validMultimodal <- df_validMultimodal %>% drop_na(Day)
 
@@ -291,7 +291,6 @@ df_validMultimodal$Day <- relevel(df_validMultimodal$Day, ref = "CD")
 # Physical Acitvity (PA) Per Participant & Day
 ```{r PhysicalActivityComputations, echo=FALSE}
 library(psych)
-
 
 T025_df = df_validMultimodal %>% 
  filter(Participant %in% sprintf("T%03d", 25) )
@@ -321,14 +320,13 @@ All_Summary
 
 describe(All_Summary )
 
-
 detach("package:psych", unload=TRUE)
 ```
 
 # Frequencies of Sedentary Activities Per Day and Participant
 ```{r StressThresholdComputations}
 # Calculate Stress Threshold
-all.df3_nPA = df_validMultimodal %>%
+df_sedentMultimodal = df_validMultimodal %>%
   group_by(Participant, Day) %>%
   filter(Activity4 %in% c("Work", "NonWork", "Driving")) %>%
   mutate(
@@ -337,33 +335,27 @@ all.df3_nPA = df_validMultimodal %>%
   ) %>% droplevels()
   
 # Use Normalized HR, 2*SD, and Median  for stress labeling
-df_sedentAct = merge(all.df3_nPA, All_Summary, by = c("Participant", "Day"), all.x = T)
+df_sedentMultimodal = merge(df_sedentMultimodal, All_Summary, by = c("Participant", "Day"), all.x = T)
 
-df_sedentAct$PA_Intensity[is.na(df_sedentAct$PA_Intensity)] <- 0
+df_sedentMultimodal$PA_Intensity[is.na(df_sedentMultimodal$PA_Intensity)] <- 0
 
-df_sedentAct <- df_sedentAct %>%
+df_sedentMultimodal <- df_sedentMultimodal %>%
   group_by(Participant, Day) %>%
   mutate(
     Stress = ifelse(HR_Normalized > NHR_0_2SD, "S", "NS"), # 0 + 2*SD is the threshold
     # percent of "S" in Stress
-    Stress_Percent = sum(Stress == "S", na.rm = TRUE) *100 / n(),
-    NStress_Percent = sum(Stress == "NS", na.rm = TRUE) *100 / n(),
+    Stress_Percent = sum(Stress == "S", na.rm = TRUE) *100 / n()
   )
 
-df_sedentAct$Stress <- as.factor(df_sedentAct$Stress)
+df_sedentMultimodal$Stress <- as.factor(df_sedentMultimodal$Stress)
 
-table(df_sedentAct$Participant, df_sedentAct$Activity4, df_sedentAct$Day)
-```
-
-```{r eval=FALSE, include=FALSE}
-# Save as csv file
-#write.csv(df_sedentAct, "../Stress_model_data_OH_DR_N24.csv", row.names = F)
+table(df_sedentMultimodal$Participant, df_sedentMultimodal$Activity4, df_sedentMultimodal$Day)
 ```
 
 # Distrubution of NHR in Sedentary Activities
 ```{r hr_normalized_pdf}
-df_sedentAct %>%
-  filter(Activity4 %in% c("Work", "NonWork", "Driving")) %>%
+df_sedentMultimodal %>%
+ # filter(Activity4 %in% c("Work", "NonWork", "Driving")) %>%
   ggplot(aes(x = HR_Normalized, fill = Activity4)) +
   geom_density(alpha = 0.5) +
   my_theme1 +
@@ -383,11 +375,11 @@ complete_grid <- expand_grid(
 complete_grid$Day = factor(complete_grid$Day, levels = c("CD", "WD", "OD"))
 
 # Ensure all combinations are present in the data
-df_sedentActForm <- complete_grid %>%
-  left_join(df_sedentAct, by = c("Participant", "Day"))
+df_sedentMultimodalForm <- complete_grid %>%
+  left_join(df_sedentMultimodal, by = c("Participant", "Day"))
 
 # T025
- plot_stress_distr <- df_sedentActForm %>% 
+ plot_stress_distr <- df_sedentMultimodalForm %>% 
  filter(Participant %in% sprintf("T%03d", 25) ) %>%
  ggplot(aes(x = HR_Normalized, fill = Stress)) +
  scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -400,7 +392,7 @@ df_sedentActForm <- complete_grid %>%
  geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
 
 # Create qq plots for T025 of Day
-plot_stress_qq <- df_sedentActForm %>% 
+plot_stress_qq <- df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 25) ) %>%
   ggplot(aes(sample = HR_Normalized)) +
   geom_qq() +
@@ -422,7 +414,7 @@ ggsave(plot_file, plot_stress_label, width = 4.0, height = 4.0, dpi = 300)
 
 library(psych)
 
-df_sedentActForm %>%
+df_sedentMultimodalForm %>%
   ungroup() %>%
   filter(Participant %in% sprintf("T%03d", 1) ) %>%
   group_by(Day) %>%
@@ -437,7 +429,7 @@ detach("package:psych", unload=TRUE)
 ## Viz of Stress Distribution per Participant and Day
 ```{r stress_threshold_viz, echo=FALSE, fig.height=11, fig.width=11}
 # T001, T002, T003, T004, T005, T006
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 1:6) ) %>%
   ggplot(aes(x = HR_Normalized, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -450,7 +442,7 @@ df_sedentActForm %>%
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
 
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 1:6) ) %>%
   ggplot(aes(sample = HR_Normalized)) +
   geom_qq() +
@@ -464,7 +456,7 @@ df_sedentActForm %>%
 
 ```{r stress_threshold_viz2, echo=FALSE, fig.height=11, fig.width=11}
 # T007, T008, T009, T010, T011, T012
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 7:12) ) %>% 
   ggplot(aes(x = HR_Normalized, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -478,7 +470,7 @@ df_sedentActForm %>%
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
 
 
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 7:12) ) %>% 
   ggplot(aes(sample = HR_Normalized)) +
   geom_qq() +
@@ -491,8 +483,8 @@ df_sedentActForm %>%
 ```
 
 ```{r stress_threshold_viz3, echo=FALSE, fig.height=11, fig.width=11}
-# T013, T014, T015, T016, T017, T018
-df_sedentActForm %>% 
+# T014, T015, T016, T017, T018
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 14:18) ) %>% 
   ggplot(aes(x = HR_Normalized, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -505,7 +497,7 @@ df_sedentActForm %>%
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
 
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 14:18) ) %>% 
   ggplot(aes(sample = HR_Normalized)) +
   geom_qq() +
@@ -519,7 +511,7 @@ df_sedentActForm %>%
 
 ```{r stress_threshold_viz4, echo=FALSE, fig.height=11, fig.width=11}
 # T019, T020, T021, T022, T023, T024, T025
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 19:25) ) %>% 
   ggplot(aes(x = HR_Normalized, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 0.9))+
@@ -532,7 +524,7 @@ df_sedentActForm %>%
   geom_vline(aes(xintercept = NHR_Median), color = "black", linetype = 1) +
   geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1) 
 
-df_sedentActForm %>% 
+df_sedentMultimodalForm %>% 
   filter(Participant %in% sprintf("T%03d", 19:25) ) %>% 
   ggplot(aes(sample = HR_Normalized)) +
   geom_qq() +
@@ -545,8 +537,8 @@ df_sedentActForm %>%
 ```
 
 # PA_Percent Plot
-```{r echo=FALSE}
-plot_PA_Percent = df_sedentAct %>%
+```{r PA_Percent_Plot, echo=FALSE}
+plot_PA_Percent = df_sedentMultimodal %>%
   group_by(Participant, Day) %>%
   dplyr::select(Participant,Day,PA_Percent) %>%
   distinct() %>%
@@ -567,19 +559,16 @@ plot_PA_Percent
 ```
 
 
-```{r stress_counts, fig.height=11, fig.width=9}
+```{r stress_barplots_1_6, fig.height=11, fig.width=9}
 tmp_P_list = sprintf("T%03d", 1:6)
 
-df_sedentAct %>%
-  group_by(Participant, Day) %>%
+df_sedentMultimodal %>%
   filter(Participant %in% tmp_P_list ) %>% 
+  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
     Participant = factor(Participant, levels = tmp_P_list),
-    n_Stress = sum(Stress == "S"),
-    n = n(),
-    n_sum = sum(n),
-    prop = n_Stress / n_sum
-    #prop = n_Stress / n
+    sum_n = sum(nT),
+    prop = nT / sum_n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -592,19 +581,16 @@ df_sedentAct %>%
   labs(x = "", y = "%", title = "--- PA_Percent")
 ```
 
-```{r stress_counts2, fig.height=11, fig.width=9}
+```{r stress_barplots_7_12, fig.height=11, fig.width=9}
 tmp_P_list = sprintf("T%03d", 7:12)
 
-df_sedentAct %>%
-  group_by(Participant, Day) %>%
+df_sedentMultimodal %>%
   filter(Participant %in% tmp_P_list ) %>% 
+  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
     Participant = factor(Participant, levels = tmp_P_list),
-    n_Stress = sum(Stress == "S"),
-    n = n(),
-    n_sum = sum(n),
-    prop = n_Stress / n_sum
-    #prop = n_Stress / n
+    sum_n = sum(nT),
+    prop = nT / sum_n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -617,19 +603,16 @@ df_sedentAct %>%
 ```
 
 
-```{r stress_counts3, fig.height=11, fig.width=9}
+```{r stress_barplots_14_18, fig.height=11, fig.width=9}
 tmp_P_list = sprintf("T%03d", 14:18)
 
-df_sedentAct %>%
-  group_by(Participant, Day) %>%
+df_sedentMultimodal %>%
   filter(Participant %in% tmp_P_list ) %>% 
+  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
     Participant = factor(Participant, levels = tmp_P_list),
-    n_Stress = sum(Stress == "S"),
-    n = n(),
-    n_sum = sum(n),
-    prop = n_Stress / n_sum
-    #prop = n_Stress / n
+    sum_n = sum(nT),
+    prop = nT / sum_n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -642,19 +625,17 @@ df_sedentAct %>%
 ```
 
 
-```{r stress_counts4, fig.height=11, fig.width=9}
+```{r stress_barplots_19_25, fig.height=11, fig.width=9}
 tmp_P_list = sprintf("T%03d", 19:25)
 
-df_sedentAct %>%
-  group_by(Participant, Day) %>%
+df_sedentMultimodal %>%
   filter(Participant %in% tmp_P_list ) %>% 
+  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
   mutate(
+    # Filter participants and adjust factor levels to match the filtered dataset
     Participant = factor(Participant, levels = tmp_P_list),
-    n_Stress = sum(Stress == "S"),
-    n = n(),
-    n_sum = sum(n),
-    prop = n_Stress / n_sum
-    #prop = n_Stress / n
+    sum_n = sum(nT),
+    prop = nT / sum_n
   ) %>%
   ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
@@ -668,22 +649,8 @@ df_sedentAct %>%
 
 \newpage
 
-```{r echo=FALSE}
-Selected_P_IDs = sprintf("T%03d", 1:25)
-# Exclude T001, T002, T005, T009, T011, T019, T021
-#Selected_P_IDs = Selected_P_IDs[-c(1,2,5,9,11,19,21)]
-
-#Selected_P_IDs
-df_sedentAct <- df_sedentAct %>%
-  filter(Participant %in% Selected_P_IDs) %>%
-  droplevels()
-
-#table(df_sedentAct$Participant, df_sedentAct$Day)
-```
-
-
 # Big 5 Box Plots
-```{r echo=FALSE, fig.height=5, fig.width=7, message=FALSE, warning=FALSE}
+```{r big_five_plot, echo=FALSE, fig.height=5, fig.width=7, message=FALSE, warning=FALSE}
 # Read the sheet and drop the unnecessary columns based on ID and Date.
 library("readxl")
 library(psych)
@@ -736,14 +703,13 @@ detach("package:psych", unload=TRUE)
 ```
 
 # Cadence PDF
-```{r}
+```{r Cadence_Plot}
 library(psych)
 
 plot_cadence_pdf <- df_validMultimodal %>% filter(!is.na(Cadence)) %>%
   filter(!is.na(PA_Activity)) %>%
   ggplot(aes(x = Cadence, fill = PA_Activity)) +
   geom_density(alpha = 0.6) +
- # my_theme1 +
   theme(legend.position = "top") +
   theme(axis.text=element_text(size=6),
         axis.title=element_text(size=8,face="bold")) +
@@ -770,7 +736,7 @@ detach("package:psych", unload=TRUE)
 \newpage
 
 # Profession Plot
-```{r echo=FALSE, fig.height=5, fig.width=5}
+```{r Profession_Plot, echo=FALSE, fig.height=5, fig.width=5}
 prof.plot <- df_validPsych %>%
   ungroup() %>%
   dplyr::select(ID, Profession) %>%
@@ -796,39 +762,18 @@ prof.plot
 ```
 
 # NASA Mental Demand Plot
-```{r message=FALSE, warning=FALSE}
+```{r NASA_MD_Plot, message=FALSE, warning=FALSE}
 library(psych)
 
-NASA_Data_MD =# df_sedentAct %>% 
+NASA_Data_MD =# df_sedentMultimodal %>% 
   df_validMultimodal %>% 
   #dplyr::select(starts_with("N_MD"), Profession) %>%
   dplyr::select(Participant, Day, Date,starts_with("N_MD"), Profession) %>%
   mutate_if(is.character,as.numeric) %>%
+  drop_na() %>%
   distinct()
 
-#colSums(is.na(NASA_Data))
-tmp_NASA_MD =  NASA_Data_MD %>%
-  ungroup() %>%
-  dplyr::select(Participant, Day) %>%
-  group_by(Participant) %>%
-  count(Participant) %>%
-  distinct()
-
-NASA_Data_MD2 <- na.omit(NASA_Data_MD)
-
-describe.by(NASA_Data_MD2, NASA_Data_MD2$Day)
-
-nlabels <- table(NASA_Data_MD2$Day)
-
-#  To create the median labels, you can use by
-meds <- c(by(NASA_Data_MD2$N_MD, NASA_Data_MD2$Day, median))
-
-myPlot <- ggplot(NASA_Data_MD2, aes(Day, N_MD, label=rownames(NASA_Data_MD2))) +
-   geom_boxplot(fill = "grey80", colour = "#3366FF") + 
-   geom_text(data = data.frame(), aes(x = names(meds) , y = meds + 1, 
-            label = paste("n =", nlabels)))
-   
-myPlot
+describe.by(NASA_Data_MD, NASA_Data_MD$Day)
  
 Nasa_p1MD = NASA_Data_MD %>%
   group_by(Day) %>%
@@ -855,27 +800,20 @@ detach("package:psych", unload=TRUE)
 ```
 
 # NASA Physical Demand Plot
-```{r message=FALSE, warning=FALSE}
+```{r NASA_PD_Plot, message=FALSE, warning=FALSE}
 library(psych)
 
 NASA_Data_PD =
   df_validMultimodal %>% 
   dplyr::select(Participant, Day, Date,starts_with("N_PD"), Profession) %>%
   mutate_if(is.character,as.numeric) %>%
+  drop_na() %>%
   distinct()
 
-tmp_NASA_PD =  NASA_Data_PD %>%
-  ungroup() %>%
-  dplyr::select(Participant, Day) %>%
-  group_by(Participant) %>%
-  count(Participant) %>%
-  distinct()
 
-NASA_Data_PD2 <- na.omit(NASA_Data_PD)
+describe.by(NASA_Data_PD, NASA_Data_PD$Day)
 
-describe.by(NASA_Data_PD2, NASA_Data_PD2$Day)
-
-Nasa_p1PD = NASA_Data_PD2 %>%
+Nasa_p1PD = NASA_Data_PD %>%
   group_by(Day) %>%
   mutate(
     n = n()
@@ -900,24 +838,16 @@ detach("package:psych", unload=TRUE)
 ```
 
 # NASA Temporal Demand Plot
-```{r message=FALSE, warning=FALSE}
+```{r NASA_TD_Plot, message=FALSE, warning=FALSE}
 
 NASA_Data_TD = df_validMultimodal %>% 
   dplyr::select(Participant, Day, Date,starts_with("N_TD"), Profession) %>%
   #dplyr::select(starts_with("N_TD"), Profession) %>%
   mutate_if(is.character,as.numeric) %>%
+  drop_na() %>%
   distinct()
 
-tmp_NASA_TD =  NASA_Data_TD %>%
-  ungroup() %>%
-  dplyr::select(Participant, Day) %>%
-  group_by(Participant) %>%
-  count(Participant) %>%
-  distinct()
-
-NASA_Data_TD2 <- na.omit(NASA_Data_TD)
-
-Nasa_p1TD = NASA_Data_TD2 %>%
+Nasa_p1TD = NASA_Data_TD %>%
   group_by(Day) %>%
   mutate(
     n = n()
@@ -926,7 +856,6 @@ Nasa_p1TD = NASA_Data_TD2 %>%
   geom_boxplot() +
   
   my_theme1 +
-  #theme(legend.position = "top") +
   scale_y_continuous(breaks = seq(0, 20, by = 5)) +
   labs(x = "", y = TeX(r'($\textit{NASA_{TD}}$)')) +# geom_point() + ylim(c(1, 20)) +
   geom_text(label =  TeX(r'($\textit{NASA_{TD}}$)'), x = 4, y=18, color = "black", size = 5) +
@@ -938,47 +867,20 @@ Nasa_p1TD = NASA_Data_TD2 %>%
     position = position_dodge(width = 0.75)
   )
 
-Nasa_p2TD = NASA_Data_TD %>%
-  group_by(Day) %>%
-  mutate(
-    n = n()
-  ) %>%
-  ggplot(aes(x =  Day, y = N_TD, fill = Profession)) +
-  geom_boxplot() +
-  my_theme1 +
-scale_y_continuous(breaks = seq(0, 150, by = 10)) +
-  labs(x = "", y = "") +
-  theme(legend.position = "top") +
-  stat_summary(
-    fun.data = n_fun, geom = "text", fun.y = median,
-    parse = T, size = 3, vjust = -0.75, hjust = 0.5, angle = 90,
-    position = position_dodge(width = 0.75)
-  )
-
 Nasa_p1TD
 ```
 
 # NASA Performance Plot
-```{r message=FALSE, warning=FALSE}
+```{r NASA_P_Plot, message=FALSE, warning=FALSE}
 
 NASA_Data_P = df_validMultimodal %>% 
   dplyr::select(Participant, Day, Date,starts_with("N_P"), Profession) %>%
   #dplyr::select(starts_with("N_P"), Profession) %>%
   mutate_if(is.character,as.numeric) %>%
+  drop_na() %>%
   distinct()
 
-tmp_NASA_P =  NASA_Data_P %>%
-  ungroup() %>%
-  dplyr::select(Participant, Day) %>%
-  group_by(Participant) %>%
-  count(Participant) %>%
-  distinct()
-
-table(tmp_NASA_P$n, tmp_NASA_P$Participant)[,]
-
-NASA_Data_P2 <- na.omit(NASA_Data_P)
-
-Nasa_p1P = NASA_Data_P2 %>%
+Nasa_p1P = NASA_Data_P %>%
   group_by(Day) %>%
   mutate(
     n = n()
@@ -996,45 +898,19 @@ Nasa_p1P = NASA_Data_P2 %>%
     position = position_dodge(width = 0.75)
   )
 
-Nasa_p2P = NASA_Data_P %>%
-  group_by(Day) %>%
-  mutate(
-    n = n()
-  ) %>%
-  ggplot(aes(x =  Day, y = N_P, fill = Profession)) +
-  geom_boxplot() +
-  my_theme1 +
-scale_y_continuous(breaks = seq(0, 150, by = 10)) +
-  labs(x = "", y = "") +
-  theme(legend.position = "top") +
-  stat_summary(
-    fun.data = n_fun, geom = "text", fun.y = median,
-    parse = T, size = 3, vjust = -0.75, hjust = 0.5, angle = 90,
-    position = position_dodge(width = 0.75)
-  )
-
 Nasa_p1P
 ```
 
 # NASA Effort Plot
-```{r message=FALSE, warning=FALSE}
+```{r NASA_E_Plot, message=FALSE, warning=FALSE}
 NASA_Data_E = df_validMultimodal %>% 
   dplyr::select(Participant, Day, Date,starts_with("N_E"), Profession) %>%
   #dplyr::select(starts_with("N_E"), Profession) %>%
   mutate_if(is.character,as.numeric) %>%
+  drop_na() %>%
   distinct()
 
-#colSums(is.na(NASA_Data))
-tmp_NASA_E =  NASA_Data_E %>%
-  ungroup() %>%
-  dplyr::select(Participant, Day) %>%
-  group_by(Participant) %>%
-  count(Participant) %>%
-  distinct()
-
-NASA_Data_E2 <- na.omit(NASA_Data_E)
-
-Nasa_p1E = NASA_Data_E2 %>%
+Nasa_p1E = NASA_Data_E %>%
   group_by(Day) %>%
   mutate(
     n = n()
@@ -1054,47 +930,19 @@ Nasa_p1E = NASA_Data_E2 %>%
     position = position_dodge(width = 0.75)
   )
 
-Nasa_p2E = NASA_Data_E %>%
-  group_by(Day) %>%
-  mutate(
-    n = n()
-  ) %>%
-  ggplot(aes(x =  Day, y = N_E, fill = Profession)) +
-  geom_boxplot() +
-  #facet_wrap(~Profession ) +
-  my_theme1 +
-scale_y_continuous(breaks = seq(0, 150, by = 10)) +
-  labs(x = "", y = "") +
-  theme(legend.position = "top") +
-  stat_summary(
-    fun.data = n_fun, geom = "text", fun.y = median,
-    parse = T, size = 3, vjust = -0.75, hjust = 0.5, angle = 90,
-    position = position_dodge(width = 0.75)
-  )
-
 Nasa_p1E 
 ```
 
 # NASA Frustration Plot
-```{r message=FALSE, warning=FALSE}
+```{r NASA_F_Plot, message=FALSE, warning=FALSE}
 NASA_Data_F = df_validMultimodal %>% 
   dplyr::select(Participant, Day, Date,starts_with("N_F"), Profession) %>%
   #dplyr::select(starts_with("N_F"), Profession) %>%
   mutate_if(is.character,as.numeric) %>%
+  drop_na() %>%
   distinct()
 
-#diff_NASA_Data_F_not_in_NASA_Data <- anti_join(NASA_Data_F, NASA_Data)
-
-tmp_NASA_F =  NASA_Data_F %>%
-  ungroup() %>%
-  dplyr::select(Participant, Day) %>%
-  group_by(Participant) %>%
-  count(Participant) %>%
-  distinct()
-
-NASA_Data_F2 <- na.omit(NASA_Data_F)
-
-Nasa_p1F = NASA_Data_F2 %>%
+Nasa_p1F = NASA_Data_F %>%
   group_by(Day) %>%
   mutate(
     n = n()
@@ -1114,24 +962,6 @@ Nasa_p1F = NASA_Data_F2 %>%
     position = position_dodge(width = 0.75)
   )
 
-Nasa_p2F = NASA_Data_F %>%
-  group_by(Day) %>%
-  mutate(
-    n = n()
-  ) %>%
-  ggplot(aes(x =  Day, y = N_F, fill = Profession)) +
-  geom_boxplot() +
-  #facet_wrap(~Profession ) +
-  my_theme1 +
-scale_y_continuous(breaks = seq(0, 150, by = 10)) +
-  labs(x = "", y = "") +
-  theme(legend.position = "top") +
-  stat_summary(
-    fun.data = n_fun, geom = "text", fun.y = median,
-    parse = T, size = 3, vjust = -0.75, hjust = 0.5, angle = 90,
-    position = position_dodge(width = 0.75)
-  )
-
 Nasa_p1F
 ```
 
@@ -1139,7 +969,7 @@ Nasa_p1F
 ```{r echo=FALSE}
 library(psych)
 
-sleep_p1 = df_sedentAct %>%
+sleep_p1 = df_sedentMultimodal %>%
   dplyr::select(Participant, Day, Sleep_Time) %>%
   distinct() %>%
   group_by(Participant, Day) %>%
@@ -1153,7 +983,7 @@ sleep_p1 = df_sedentAct %>%
     position = position_dodge(width = 0.75)
   )
 
-Sleep_df <- df_sedentAct %>%
+Sleep_df <- df_sedentMultimodal %>%
   dplyr::select(Participant, Day, Sleep_Time) %>%
   distinct()
 
@@ -1161,7 +991,7 @@ Sleep_df
 
 describe(Sleep_df)
 
-sleep_p13 = df_sedentAct %>%
+sleep_p13 = df_sedentMultimodal %>%
   filter(!is.na(Sleep_Time)) %>%
   #distinct() %>%
   ggplot(aes(x=Sleep_Time)) +
@@ -1172,7 +1002,7 @@ sleep_p13 = df_sedentAct %>%
   theme(axis.text=element_text(size=6),
         axis.title=element_text(size=8,face="bold"))
 
-sleep_p2 = df_sedentAct %>%
+sleep_p2 = df_sedentMultimodal %>%
   dplyr::select(Participant, Day, Sleep_Time, Profession) %>%
   distinct() %>%
   group_by(Participant, Day) %>%
@@ -1194,9 +1024,9 @@ detach("package:psych", unload=TRUE)
 ```{r echo=FALSE}
 library(psych)
 
-describe(df_sedentAct)
+describe(df_sedentMultimodal)
 
-mCadence_p1 = df_sedentAct %>%
+mCadence_p1 = df_sedentMultimodal %>%
   #filter(!is.na(PA_Intensity)) %>%
   #distinct() %>%
   ggplot(aes(x=Cadence)) +
@@ -1216,7 +1046,7 @@ detach("package:psych", unload=TRUE)
 
 # mCadence Box Plot
 ```{r echo=FALSE}
-candece_p1 = df_sedentAct %>%
+candece_p1 = df_sedentMultimodal %>%
   dplyr::select(Participant, Day, Cadence) %>%
   #distinct() %>%
   group_by(Participant, Day) %>%
@@ -1229,7 +1059,7 @@ candece_p1 = df_sedentAct %>%
     position = position_dodge(width = 0.75)
   )
 
-candece_p2 = df_sedentAct %>%
+candece_p2 = df_sedentMultimodal %>%
   dplyr::select(Participant, Day, Cadence, Profession) %>%
   #distinct() %>%
   group_by(Participant, Day) %>%
@@ -1265,18 +1095,18 @@ ggsave(plot_file, plot_eda_final2, width = 4.0, height = 5.0, dpi = 300)
 
 # Collinearity Plot
 ```{r include=FALSE}
-df_sedentAct$Activity4 <-factor(df_sedentAct$Activity4, levels = c("Work","NonWork","Driving"))
-df_sedentAct$Day <- relevel(df_sedentAct$Day, ref = "CD")
-df_sedentAct$Period <- factor(df_sedentAct$Period, levels =c("Morning","Afternoon"))
+df_sedentMultimodal$Activity4 <-factor(df_sedentMultimodal$Activity4, levels = c("Work","NonWork","Driving"))
+df_sedentMultimodal$Day <- relevel(df_sedentMultimodal$Day, ref = "CD")
+df_sedentMultimodal$Period <- factor(df_sedentMultimodal$Period, levels =c("Morning","Afternoon"))
 
-df_sedentAct = merge(df_sedentAct, big5_df, by.x = c("Participant", "Profession"), by.y  = c("ID", "Profession"), x.all = TRUE)
+df_sedentMultimodal = merge(df_sedentMultimodal, big5_df, by.x = c("Participant", "Profession"), by.y  = c("ID", "Profession"), x.all = TRUE)
 ```
 
 ```{r fig.height=11, fig.width=11, message=FALSE, warning=FALSE}
 library(ggtext)
 library(psych)
 
-reduced_data <- subset(df_sedentAct, 
+reduced_data <- subset(df_sedentMultimodal, 
                        select = c(Day, Period, Activity4, Cadence,PA_Percent, PA_Intensity, 
                                   Sleep_Time, Profession,
                                   N_MD, N_PD, N_TD, N_P, N_E, N_F,
@@ -1323,7 +1153,7 @@ ggsave(plot_file, corr.plot_label, width = 11.0, height = 11.0, dpi = 300)
 
 ## Descriptive Statistics 
 
-reduced_data_B5 <- subset(df_sedentAct, 
+reduced_data_B5 <- subset(df_sedentMultimodal, 
         select = c(Agreeableness, Conscientiousness, Extraversion, Neuroticism, Openness
                    )
         )
@@ -1332,7 +1162,7 @@ reduced_data_B5 = reduced_data_B5 %>%
   distinct()
 
 
-# reduced_data_NASA <- subset(df_sedentAct, 
+# reduced_data_NASA <- subset(df_sedentMultimodal, 
 #         select = c(
 #                    N_MD, N_PD, N_TD, N_P, N_E, N_F)
 #         )
@@ -1371,7 +1201,7 @@ detach("package:psych", unload=TRUE)
 library(sjPlot)
 library(sjmisc)
 
-stress_logit_model = glmer(Stress ~  Cadence + Day*Period + Activity4 + Day*PA_Percent*PA_Intensity + Sleep_Time + Profession + N_MD + N_PD + N_P + Agreeableness + Conscientiousness + Extraversion + Neuroticism + Openness + (1 | Participant), data = df_sedentAct, family = binomial(link = "logit"))
+stress_logit_model = glmer(Stress ~  Cadence + Day*Period + Activity4 + Day*PA_Percent*PA_Intensity + Sleep_Time + Profession + N_MD + N_PD + N_P + Agreeableness + Conscientiousness + Extraversion + Neuroticism + Openness + (1 | Participant), data = df_sedentMultimodal, family = binomial(link = "logit"))
 
 summary(stress_logit_model)
 summ(stress_logit_model, digits=4)
@@ -1484,7 +1314,7 @@ m.plot.3way
 # Remove Conscientiousness from the Model
 ```{r echo=FALSE, warning=FALSE}
 # Fit the model
-stress_logit_model1 = glmer(Stress ~ Cadence + Day*Period + Activity4 + Day*PA_Percent*PA_Intensity + Sleep_Time + Profession + N_MD + N_PD + N_P + Agreeableness + Extraversion + Neuroticism + Openness + (1 | Participant), data = df_sedentAct, family = binomial(link = "logit"))
+stress_logit_model1 = glmer(Stress ~ Cadence + Day*Period + Activity4 + Day*PA_Percent*PA_Intensity + Sleep_Time + Profession + N_MD + N_PD + N_P + Agreeableness + Extraversion + Neuroticism + Openness + (1 | Participant), data = df_sedentMultimodal, family = binomial(link = "logit"))
 
 summary(stress_logit_model1)
 summ(stress_logit_model1, digits=4)
@@ -1494,20 +1324,20 @@ summ(stress_logit_model1, digits=4)
 ```{r}
 #   data$s_variable <- scale(data$original_variable)
 
-df_sedentAct$s_Cadence <- scale(df_sedentAct$Cadence)
-df_sedentAct$s_PA_Percent <- scale(df_sedentAct$PA_Percent)
-df_sedentAct$s_PA_Intensity <- scale(df_sedentAct$PA_Intensity)
-df_sedentAct$s_Sleep_Time <- scale(df_sedentAct$Sleep_Time)
-df_sedentAct$s_N_MD <- scale(df_sedentAct$N_MD)
-df_sedentAct$s_N_PD <- scale(df_sedentAct$N_PD)
-df_sedentAct$s_N_P <- scale(df_sedentAct$N_P)
-df_sedentAct$s_Agreeableness <- scale(df_sedentAct$Agreeableness)
-df_sedentAct$s_Extraversion <- scale(df_sedentAct$Extraversion)
-df_sedentAct$s_Neuroticism <- scale(df_sedentAct$Neuroticism)
-df_sedentAct$s_Openness <- scale(df_sedentAct$Openness)
+df_sedentMultimodal$s_Cadence <- scale(df_sedentMultimodal$Cadence)
+df_sedentMultimodal$s_PA_Percent <- scale(df_sedentMultimodal$PA_Percent)
+df_sedentMultimodal$s_PA_Intensity <- scale(df_sedentMultimodal$PA_Intensity)
+df_sedentMultimodal$s_Sleep_Time <- scale(df_sedentMultimodal$Sleep_Time)
+df_sedentMultimodal$s_N_MD <- scale(df_sedentMultimodal$N_MD)
+df_sedentMultimodal$s_N_PD <- scale(df_sedentMultimodal$N_PD)
+df_sedentMultimodal$s_N_P <- scale(df_sedentMultimodal$N_P)
+df_sedentMultimodal$s_Agreeableness <- scale(df_sedentMultimodal$Agreeableness)
+df_sedentMultimodal$s_Extraversion <- scale(df_sedentMultimodal$Extraversion)
+df_sedentMultimodal$s_Neuroticism <- scale(df_sedentMultimodal$Neuroticism)
+df_sedentMultimodal$s_Openness <- scale(df_sedentMultimodal$Openness)
 
 
-stress_logit_model_s = glmer(Stress ~  s_Cadence + Day*Period + Activity4 + Day*s_PA_Percent*s_PA_Intensity + s_Sleep_Time + Profession + s_N_MD + s_N_PD + s_N_P + s_Agreeableness + s_Extraversion + s_Neuroticism + s_Openness + (1 | Participant), data = df_sedentAct, family = binomial(link = "logit"))
+stress_logit_model_s = glmer(Stress ~  s_Cadence + Day*Period + Activity4 + Day*s_PA_Percent*s_PA_Intensity + s_Sleep_Time + Profession + s_N_MD + s_N_PD + s_N_P + s_Agreeableness + s_Extraversion + s_Neuroticism + s_Openness + (1 | Participant), data = df_sedentMultimodal, family = binomial(link = "logit"))
 
 summary(stress_logit_model_s)
 summ(stress_logit_model_s, confint = TRUE, digits=4)
@@ -1515,15 +1345,22 @@ summ(stress_logit_model_s, confint = TRUE, digits=4)
 
 # Mixed Effects Visualization of Stress Model 
 ```{r echo=FALSE, fig.height=4.5, fig.width=7}
-m.plot.main_cdn <- sjPlot::plot_model(stress_logit_model_s,
-                   type = "pred",
-                   terms = c("s_Cadence[all]"),
-                   colors = "black",
-                   title = "") +
-                   theme_bw() +
-                   theme(axis.text = element_text(size = 10), 
-                         panel.grid.major = element_blank(), 
-                         panel.grid.minor = element_blank())
+library(ggeffects)
+
+m.plot.main_cdn <-  ggpredict(stress_logit_model_s, "s_Cadence[all]") %>%
+  ggplot(aes(x, predicted)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  geom_line(colour = "red", size = 2) +
+  geom_vline(
+    xintercept = mean(df_sedentMultimodal$s_Cadence, na.rm = TRUE),
+    linetype = "dashed",
+    color = "gray",
+    size = 1
+  ) +   my_theme3 + 
+  coord_cartesian(ylim = c(0.1, 1)) + 
+  scale_y_continuous(labels = scales::percent) +
+  #remove y axis labels
+  labs(x = TeX(r'($\mu\textit{CDN} \ \[SPM/2\]$)'), y = TeX(r'($\textit{P(S)}$)'))
 
 m.plot.main_cdn 
 
@@ -1540,33 +1377,41 @@ m.plot.main_day <- sjPlot::plot_model(stress_logit_model,
 
 m.plot.main_day
 
-m.plot.main_act <- sjPlot::plot_model(stress_logit_model_s,
-                   type = "pred",
-                   terms = c("Activity4[all]"),
-                   colors = "black",
-                   title = "") +
-                   theme_bw() +
-                   theme(
-                         axis.text = element_text(size = 10), 
-                         panel.grid.major = element_blank(), 
-                         panel.grid.minor = element_blank())
+m.plot.main_act <- ggpredict(stress_logit_model_s,
+  terms = c("Activity4")) %>%
+  mutate(group = as.factor(c("1", "2", "3"))) %>%
+  drop_na() %>%
+  gather(key = "key", value = "value", conf.low, conf.high) %>%
+  ggplot() +
+  geom_line(aes(x = x, y = value, color = group), size = 2) +
+  geom_point(aes(x = x, y = predicted, color = group, size = 2)) +
+  scale_color_manual(values = c("gray", "red", "black")) +
+  my_theme3 + 
+  coord_cartesian(ylim = c(0.1, 1)) +  
+  scale_x_discrete(labels = c("WRK", TeX(r'($\neg$WRK)'), "DRV")) +
+  scale_y_continuous(labels = scales::percent)  +
+  labs(x = "", y = "") + theme(axis.text.y = element_blank()) 
 
 m.plot.main_act
 
-m.plot.main_nmd <- sjPlot::plot_model(stress_logit_model_s,
-                   type = "pred",
-                   terms = c("s_N_MD[all]"),
-                   colors = "black",
-                   title = "") +
-                   theme_bw() +
-                   theme(axis.text = element_text(size = 10),
-                         panel.grid.major = element_blank(), 
-                         panel.grid.minor = element_blank())
+m.plot.main_nmd <- ggpredict(stress_logit_model_s, "s_N_MD[all]") %>%
+    ggplot(aes(x, predicted)) +
+    geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+    geom_line(colour = "red", size = 2) +
+    geom_vline(
+     xintercept = mean(df_sedentMultimodal$Ps_N_MD),
+     linetype = "dashed",
+     color = "gray",
+     size = 1
+   ) +  my_theme3 + coord_cartesian(ylim = c(0.1, 1)) +  
+   scale_y_continuous(labels = scales::percent) +
+   labs(x = TeX(r'($\textit{NASA_{MD}}$)'), y = "") + theme(axis.text.y = element_blank()) 
 
 m.plot.main_nmd
 
 m.plot.2way <- sjPlot::plot_model(stress_logit_model_s,
                    type = "pred",
+                   axis.title = TeX(r'($\textit{P(S)}$)'),
                    terms = c("Day[all]", "Period[all]")) +
                    set_theme (
                      base = theme_bw(),
@@ -1580,6 +1425,8 @@ m.plot.2way
 
 m.plot.3way <- sjPlot::plot_model(stress_logit_model_s,
                    type = "pred",
+                   axis.title = TeX(r'($\textit{P(S)}$)'),
+                   legend.title="PA Extent",
                    terms = c("Day[all]", "s_PA_Percent[-1, 1]", "s_PA_Intensity[-1, 1]")) +
                    set_theme (
                      base = theme_bw(),
@@ -1589,74 +1436,13 @@ m.plot.3way <- sjPlot::plot_model(stress_logit_model_s,
                          panel.grid.major = element_blank(), 
                          panel.grid.minor = element_blank())
 
+m.plot.3way$data$facet <- factor(m.plot.3way$data$facet)
+levels(m.plot.3way$data$facet)  <- c("PA Intensity = -1", "PA Intensity = 1")
+
 m.plot.3way
 ```
 
 &nbsp;
-
-
-
-```{r eval=FALSE, echo=FALSE, fig.height=4.5, fig.width=7}
- # Visualization of Interactions of HR Stress Model, if there is interaction
-
- # i.plot.da <- sjPlot::plot_model(stress_logit_model_s,
- #                    show.values=TRUE, show.p=TRUE, type = "int",
- #                    title="") + my_theme3 + labs(x = "", y = TeX(r'($\textit{P(S)}$)')) +
- #  theme(legend.position = "bottom",
- #  legend.box.margin = margin(-25, 0, 0, 0)) +  scale_color_manual(values = c("magenta","blue")) 
-
-library(ggeffects)
-
-#detach("package:ggpubr", unload = TRUE)
-
-# BEHAV 
-i.plot.behav <- ggpredict(stress_logit_model_s,
-  terms = c("Activity4")) %>%
-  mutate(group = as.factor(c("1", "2", "3"))) %>%
-  drop_na() %>%
-  gather(key = "key", value = "value", conf.low, conf.high) %>%
-  ggplot() +
-  geom_line(aes(x = x, y = value, color = group), size = 2) +
-  geom_point(aes(x = x, y = predicted, color = group, size = 2)) +
-  scale_color_manual(values = c("gray", "red", "black")) +
-  my_theme3 + 
-  coord_cartesian(ylim = c(0.1, 1)) +  
-  scale_x_discrete(labels = c("WRK", TeX(r'($\neg$WRK)'), "DRV")) +
-  scale_y_continuous(labels = scales::percent)  +
-  labs(x = "", y = TeX(r'($\textit{P(S)}$)'))
-
-# CADENCE
-i.plot.cdn <-  ggpredict(stress_logit_model_s, "Cadence[all]") %>%
-  ggplot(aes(x, predicted)) +
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
-  geom_line(colour = "red", size = 2) +
-  geom_vline(
-    xintercept = mean(df_sedentAct$Cadence, na.rm = TRUE),
-    linetype = "dashed",
-    color = "gray",
-    size = 1
-  ) +   my_theme3 + 
-  coord_cartesian(ylim = c(0.1, 1)) + 
-  scale_y_continuous(labels = scales::percent) +
-  #remove y axis labels
-  labs(x = TeX(r'($\mu\textit{CDN} \ \[SPM/2\]$)'), y = "")   + theme(axis.text.y = element_blank()) 
-
-# PA_Percent
-# i.plot.PA_Percent <- ggpredict(stress_logit_model_s, "PA_Percent[all]") %>%
-#   ggplot(aes(x, predicted)) +
-#   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
-#   geom_line(colour = "red", size = 2) +
-#   geom_vline(
-#     xintercept = mean(df_sedentAct$PA_Percent),
-#     linetype = "dashed",
-#     color = "gray",
-#     size = 1
-#   ) +  my_theme3 + coord_cartesian(ylim = c(0.1, 1)) +  
-#   scale_y_continuous(labels = scales::percent) +
-#   labs(x = TeX(r'($\textit{Percent PA} \ \[\]$)'), y = "") + theme(axis.text.y = element_blank()) 
-```
-
-
 
 ```{r echo=FALSE, fig.height=9, fig.width=7, message=FALSE, warning=FALSE}
 
@@ -1695,6 +1481,6 @@ final.w.legend
 plot_file = paste0(plot_dir, "HR-Stress-Model-Plots.pdf")
 ggsave(plot_file, final.w.legend, width = 5.5, height = 8, dpi = 300)
 
-levels(df_sedentAct$Participant)
+levels(df_sedentMultimodal$Participant)
 ```
 
