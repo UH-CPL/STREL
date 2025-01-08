@@ -1394,11 +1394,11 @@ m.plot.main_act <- ggpredict(stress_logit_model_s,
   geom_line(aes(x = x, y = value, color = group), size = 2) +
   geom_point(aes(x = x, y = predicted, color = group, size = 2)) +
   scale_color_manual(values = c("gray", "red", "black")) +
-  my_theme3 + 
   coord_cartesian(ylim = c(0.1, 1)) +  
+  my_theme3 + 
   scale_x_discrete(labels = c("WRK", TeX(r'($\neg$WRK)'), "DRV")) +
   scale_y_continuous(labels = scales::percent)  +
-  labs(x = "", y = "") + theme(axis.text.y = element_blank()) 
+  labs(x = "", y = "") 
 
 m.plot.main_act
 
@@ -1422,12 +1422,15 @@ m.plot.2way <- sjPlot::plot_model(stress_logit_model_s,
                    axis.title = TeX(r'($\textit{P(S)}$)'),
                    terms = c("Day[all]", "Period[all]")) +
                    set_theme (
-                     base = theme_bw(),
+                     base = my_theme3, # theme_bw(),
                      legend.pos = "bottom") +
                    theme(axis.title.x = element_blank(),
                      axis.text = element_text(size = 10),
                      panel.grid.major = element_blank(), 
-                     panel.grid.minor = element_blank())
+                     panel.grid.minor = element_blank()) +
+                    labs(x = "", y = "", title = "")   +
+  coord_cartesian(ylim = c(0.1, 0.9)) + 
+  scale_y_continuous(labels = scales::percent) 
 
 m.plot.2way
 
@@ -1437,12 +1440,15 @@ m.plot.3way <- sjPlot::plot_model(stress_logit_model_s,
                    legend.title="PA Extent",
                    terms = c("Day[all]", "s_PA_Percent[-1, 1]", "s_PA_Intensity[-1, 1]")) +
                    set_theme (
-                     base = theme_bw(),
+                     base = my_theme3, # theme_bw(),
                      legend.pos = "bottom") +
                    theme(axis.title.x = element_blank(),
                          axis.text = element_text(size = 10),
                          panel.grid.major = element_blank(), 
-                         panel.grid.minor = element_blank())
+                         panel.grid.minor = element_blank())+
+                    labs(x = "", y = "", title = "") +
+  coord_cartesian(ylim = c(0.1, 0.9)) + 
+  scale_y_continuous(labels = scales::percent) 
 
 m.plot.3way$data$facet <- factor(m.plot.3way$data$facet)
 levels(m.plot.3way$data$facet)  <- c("PA Intensity = -1", "PA Intensity = 1")
@@ -1462,25 +1468,26 @@ p_a <- cowplot::plot_grid(
   label_size = 13
 ) 
 
-p_bcd <- cowplot::plot_grid(
-  m.plot.main_cdn, m.plot.main_act, m.plot.main_nmd,
-  nrow = 1,
-  scale = c(0.97, .97, .97),
-  labels = c("a2", "a3", "a4"),
-  label_size = 13
-)
-
 p_e <- cowplot::plot_grid(
   m.plot.3way,
   nrow = 1,
   scale = c(.97),
-  labels = c("a5"),
+  labels = c("a2"),
   label_size = 13
 ) 
 
+p_bcd <- cowplot::plot_grid(
+  m.plot.main_cdn, m.plot.main_act, m.plot.main_nmd,
+  nrow = 1,
+  scale = c(0.97, .97, .97),
+  labels = c("a3", "a4", "a5"),
+  label_size = 13
+)
+
 final.w.legend <- cowplot::plot_grid(p_a, p_e, p_bcd, mylegend, 
-  nrow = 4,
-  rel_heights = c(3.0, 3.0, 3.0, 02)
+  nrow = 4,   
+  scale = c(0.97, .97, .97,.1),
+  rel_heights = c(3.0, 3.0, 3.0, 0.5)
 )
 
 final.w.legend
