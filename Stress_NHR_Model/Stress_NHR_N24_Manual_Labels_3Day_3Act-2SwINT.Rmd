@@ -344,7 +344,9 @@ df_sedentMultimodal <- df_sedentMultimodal %>%
   mutate(
     Stress = ifelse(HR_Normalized > NHR_0_2SD, "S", "NS"), # 0 + 2*SD is the threshold
     # percent of "S" in Stress
-    Stress_Percent = sum(Stress == "S", na.rm = TRUE) *100 / n()
+    Stress_Percent = sum(Stress == "S", na.rm = TRUE) *100 / n(),
+    S = sum(Stress == "S", na.rm = TRUE) *100 / n(), # needs for barplot
+    NS = sum(Stress == "NS", na.rm = TRUE) *100 / n() # needs for barplot
   )
 
 df_sedentMultimodal$Stress <- as.factor(df_sedentMultimodal$Stress)
@@ -571,14 +573,16 @@ plot_PA_Percent
 tmp_P_list = sprintf("T%03d", 1:6)
 
 df_sedentMultimodal %>%
-  filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
-  mutate(
-    Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+  filter(Participant %in% tmp_P_list) %>%
+  dplyr::select(Participant, Day, S, NS,PA_Percent) %>%
+  mutate(Participant = factor(Participant, levels = tmp_P_list)) %>%
+  distinct() %>%
+  pivot_longer(
+    cols = c(S, NS), 
+    names_to = "Stress", 
+    values_to = "Percent"
   ) %>%
-  ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
+  ggplot(aes(x = Stress, y= Percent, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
   geom_bar(stat = "identity") +
   geom_hline(aes(yintercept = PA_Percent, linetype = "PA_Percent"), color = "black", linetype = 2) +
@@ -593,14 +597,16 @@ df_sedentMultimodal %>%
 tmp_P_list = sprintf("T%03d", 7:12)
 
 df_sedentMultimodal %>%
-  filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
-  mutate(
-    Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+  filter(Participant %in% tmp_P_list) %>%
+  dplyr::select(Participant, Day, S, NS,PA_Percent) %>%
+  mutate(Participant = factor(Participant, levels = tmp_P_list)) %>%
+  distinct() %>%
+  pivot_longer(
+    cols = c(S, NS), 
+    names_to = "Stress", 
+    values_to = "Percent"
   ) %>%
-  ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
+  ggplot(aes(x = Stress, y= Percent, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
   geom_bar(stat = "identity") +
   geom_hline(aes(yintercept = PA_Percent), color = "black", linetype = 2) +
@@ -615,14 +621,16 @@ df_sedentMultimodal %>%
 tmp_P_list = sprintf("T%03d", 14:18)
 
 df_sedentMultimodal %>%
-  filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
-  mutate(
-    Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+  filter(Participant %in% tmp_P_list) %>%
+  dplyr::select(Participant, Day, S, NS,PA_Percent) %>%
+  mutate(Participant = factor(Participant, levels = tmp_P_list)) %>%
+  distinct() %>%
+  pivot_longer(
+    cols = c(S, NS), 
+    names_to = "Stress", 
+    values_to = "Percent"
   ) %>%
-  ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
+  ggplot(aes(x = Stress, y= Percent, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
   geom_bar(stat = "identity") +
   geom_hline(aes(yintercept = PA_Percent), color = "black", linetype = 2) +
@@ -637,15 +645,16 @@ df_sedentMultimodal %>%
 tmp_P_list = sprintf("T%03d", 19:25)
 
 df_sedentMultimodal %>%
-  filter(Participant %in% tmp_P_list ) %>% 
-  mutate(Stress_percent = round(Stress_Percent, 1)) %>%
-  mutate(
-    # Filter participants and adjust factor levels to match the filtered dataset
-    Participant = factor(Participant, levels = tmp_P_list),
-    sum_n = sum(nT),
-    prop = nT / sum_n
+  filter(Participant %in% tmp_P_list) %>%
+  dplyr::select(Participant, Day, S, NS,PA_Percent) %>%
+  mutate(Participant = factor(Participant, levels = tmp_P_list)) %>%
+  distinct() %>%
+  pivot_longer(
+    cols = c(S, NS), 
+    names_to = "Stress", 
+    values_to = "Percent"
   ) %>%
-  ggplot(aes(x = Stress, y= prop*100, fill = Stress)) +
+  ggplot(aes(x = Stress, y= Percent, fill = Stress)) +
   scale_fill_manual(values = alpha(mycolors_stress, 1)) +
   geom_bar(stat = "identity") +
   geom_hline(aes(yintercept = PA_Percent), color = "black", linetype = 2) +
@@ -1398,7 +1407,7 @@ m.plot.main_act <- ggpredict(stress_logit_model_s,
   my_theme3 + 
   scale_x_discrete(labels = c("WRK", TeX(r'($\neg$WRK)'), "DRV")) +
   scale_y_continuous(labels = scales::percent)  +
-  labs(x = "", y = "") 
+  labs(x = "", y = "") +theme(axis.text.y = element_blank()) 
 
 m.plot.main_act
 
@@ -1430,7 +1439,8 @@ m.plot.2way <- sjPlot::plot_model(stress_logit_model_s,
                      panel.grid.minor = element_blank()) +
                     labs(x = "", y = "", title = "")   +
   coord_cartesian(ylim = c(0.1, 0.9)) + 
-  scale_y_continuous(labels = scales::percent) 
+  scale_y_continuous(labels = scales::percent) +
+  labs(x ="", y = TeX(r'($\textit{P(S)}$)'))
 
 m.plot.2way
 
@@ -1446,9 +1456,10 @@ m.plot.3way <- sjPlot::plot_model(stress_logit_model_s,
                          axis.text = element_text(size = 10),
                          panel.grid.major = element_blank(), 
                          panel.grid.minor = element_blank())+
-                    labs(x = "", y = "", title = "") +
+                    labs( title = "") +
   coord_cartesian(ylim = c(0.1, 0.9)) + 
-  scale_y_continuous(labels = scales::percent) 
+  scale_y_continuous(labels = scales::percent)  +
+  labs(x ="", y = TeX(r'($\textit{P(S)}$)'))
 
 m.plot.3way$data$facet <- factor(m.plot.3way$data$facet)
 levels(m.plot.3way$data$facet)  <- c("PA Intensity = -1", "PA Intensity = 1")
@@ -1458,6 +1469,7 @@ m.plot.3way
 
 &nbsp;
 
+# Final Plot
 ```{r echo=FALSE, fig.height=9, fig.width=7, message=FALSE, warning=FALSE}
 
 p_a <- cowplot::plot_grid(
