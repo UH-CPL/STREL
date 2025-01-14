@@ -283,6 +283,18 @@ df_validMultimodal[df_validMultimodal$Activity4 == "Biking",]$PA_Activity =  "PA
 df_validMultimodal$Day <- relevel(df_validMultimodal$Day, ref = "CD")
 ```
 
+# Age and BMI Descriptive Statistics
+```{r message=FALSE, warning=FALSE}
+library(psych)
+
+df_rawPsych %>% 
+  group_by(ID) %>%
+  dplyr::select(Age,BMI) %>%
+  distinct() %>%
+  describe()
+detach("package:psych", unload=TRUE)
+
+```
 
 # Physical Acitvity (PA) Per Participant & Day
 ```{r PhysicalActivityComputations, echo=FALSE}
@@ -775,6 +787,30 @@ prof.plot <- df_validPsych %>%
   my_theme1 
 
 prof.plot
+# gender.plot
+
+gender.plot <- df_validPsych %>%
+  ungroup() %>%
+  dplyr::select(ID, Gender) %>%
+  group_by(Gender) %>%
+  distinct() %>%
+  count() %>%
+  ungroup() %>%
+  mutate(
+    sum_n = sum(n),
+    prop = n / sum_n 
+  ) %>%
+  ggplot(aes(x = Gender, y = prop, fill = Gender)) +
+  geom_bar(stat = "identity",  fill = c("coral1", "darkturquoise")) +
+    scale_y_continuous(labels = scales::percent) +
+  geom_text(aes(label = n),
+            vjust = 1.6,
+            color = "black",
+            size = 5) +
+  labs(x = "", y = "", title = " Gender Distribution") +
+  my_theme1 
+
+gender.plot
 ```
 
 # NASA Mental Demand Plot
