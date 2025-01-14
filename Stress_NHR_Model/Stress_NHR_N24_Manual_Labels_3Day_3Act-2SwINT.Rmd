@@ -763,7 +763,7 @@ detach("package:psych", unload=TRUE)
 
 \newpage
 
-# Profession Plot
+# Profession and Gender Plot
 ```{r Profession_Plot, echo=FALSE, fig.height=5, fig.width=5}
 prof.plot <- df_validPsych %>%
   ungroup() %>%
