@@ -741,7 +741,7 @@ plot_cadence_pdf <- df_validMultimodal %>% filter(!is.na(Cadence)) %>%
   theme(legend.title = element_text(size = 5), 
                legend.text = element_text(size = 5)) +
   theme(legend.key.size = unit(0.4, "cm")) +
-   labs(x = TeX(r'($\textit{CDN} \ \[SPM/2\]$)'),
+   labs(x = TeX(r'($\textit{CDN} \ \[CPM/2\]$)'),
        y = "PDF",
        fill = ""
        ) +theme(legend.position = c(0.8, 0.8), #"top",
@@ -1032,7 +1032,7 @@ mCadence_p1 = df_sedentMultimodal %>%
   geom_density(fill = "black") +
   my_theme1 +
   theme(legend.position = "top") +
-   labs(x = TeX(r'($\textit{mCadence} \ \[SPM/2\]$)'),
+   labs(x = TeX(r'($\textit{mCadence} \ \[CPM/2\]$)'),
        y = "PDF",
        fill = ""
        ) +theme(legend.position = c(0.8, 0.8), #"top",
@@ -1181,7 +1181,7 @@ m.plot.main1 <- sjPlot::plot_model(stress_logit_model,
                    theme(axis.text = element_text(size = 10), 
                          panel.grid.major = element_blank(), 
                          panel.grid.minor = element_blank()) +
-                   labs(x = TeX(r'($\textit{mCDN} \ \[SPM/2\]$)'), 
+                   labs(x = TeX(r'($\textit{mCDN} \ \[CPM/2\]$)'), 
                         y = TeX(r'($\textit{P(S)}$)'))
 
 m.plot.main2 <- sjPlot::plot_model(stress_logit_model,
@@ -1341,7 +1341,7 @@ m.plot.main_cdn <-  ggpredict(stress_logit_model_s, "s_Cadence[all]") %>%
   coord_cartesian(ylim = c(0.1, 1)) + 
   scale_y_continuous(labels = scales::percent) +
   #remove y axis labels
-  labs(x = TeX(r'($\textit{mCDN} \ \[SPM/2\]$)'), y = TeX(r'($\textit{P(S)}$)'))
+  labs(x = TeX(r'($\textit{mCDN} \ \[CPM/2\]$)'), y = TeX(r'($\textit{P(S)}$)'))
 
 m.plot.main_cdn 
 
