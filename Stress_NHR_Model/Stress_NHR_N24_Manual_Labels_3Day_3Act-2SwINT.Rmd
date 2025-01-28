@@ -1445,7 +1445,7 @@ m.plot.3way <- sjPlot::plot_model(stress_logit_model_s,
   labs(x ="", y = TeX(r'($\textit{P(S)}$)'))
 
 m.plot.3way$data$facet <- factor(m.plot.3way$data$facet)
-levels(m.plot.3way$data$facet)  <- c("PA Intensity = -1", "PA Intensity = 1")
+#levels(m.plot.3way$data$facet)  <- c("PA Intensity = -1", "PA Intensity = 1")
 
 m.plot.3way
 ```
