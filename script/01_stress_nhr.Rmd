@@ -59,7 +59,7 @@ getwd()
 
 ```{r SpecialThemes, message=FALSE, warning=FALSE}
 # load the utility script
-source("../script/Utility_Script.R")
+source("../script/utility_script.R")
 
 activity_names <- c(
   `sleeping` = "Sleeping",
@@ -647,7 +647,10 @@ Nasa_p1MD = NASA_Data_MD %>%
   ) %>%
   ggplot(aes(x =  Day, y = N_MD, fill = Day)) +
   geom_boxplot() +
-  scale_y_continuous(breaks = seq(0, 20, by = 5)) +
+  scale_y_continuous(
+    breaks = seq(0, 20, by = 5),
+    limits = c(0, 20)  # Explicitly set the limits for the y-axis
+  ) +
   labs(x = "", y = TeX(r'($\textit{NASA_{MD}}$)')) +
   theme(axis.text=element_text(size=6),
         axis.title=element_text(size=8,face="bold"),
@@ -761,8 +764,9 @@ Nasa_p1P = NASA_Data_P %>%
         legend.position = "none") +
   stat_summary(
     fun.data = n_fun, geom = "text", fun.y = median,
-    parse = T, size = 2, vjust = 1.95, hjust = 0.5, angle = 0,
-    position = position_dodge(width = 0.75)
+    parse = T, size = 2, vjust = 1.75, hjust = 0, angle = 0,
+    position = position_dodge(width = 0.75),
+    aes(y = 7)  # Adjusts the y-position to 10
   )
 
 Nasa_p1P

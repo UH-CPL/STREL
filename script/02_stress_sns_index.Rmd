@@ -59,7 +59,7 @@ getwd()
 
 ```{r SpecialThemes, message=FALSE, warning=FALSE}
 
-source("../script/Utility_Script.R")
+source("../script/utility_script.R")
 
 activity_names <- c(
   `sleeping` = "Sleeping",
