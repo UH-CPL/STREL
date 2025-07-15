@@ -31,7 +31,7 @@ my_theme <- theme_bw() +
     panel.grid = element_blank(),
     plot.title = element_text(hjust = 0.5),
     axis.text.x = element_blank(),
-    axis.text.y = element_text(size = 8, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
     strip.text = element_text(size = 10),
     legend.position = "none"
   )
@@ -39,7 +39,15 @@ my_theme <- theme_bw() +
 # With  x-y axis label
 my_theme1 <- my_theme +
   theme(
-    axis.text.x = element_text(size = 8, face = "bold")
+    axis.text.x = element_text(size = 12, face = "bold")
+  )
+
+
+# With  x-y axis label
+my_theme2 <- my_theme1 +
+  theme(
+    axis.text.x = element_text(size = 8, face = "bold"),
+    axis.text.y = element_text(size = 8, face = "bold")
   )
 
 mycolors_stress <- c(NS = "green", S = "red")
@@ -80,11 +88,19 @@ activity_legend_plot <- ggplot(activity_legend_df, aes(x = Activity, fill = Acti
   theme(
     legend.position = "top",
     legend.title = element_blank(),
-    legend.text = element_text(size = 12, face = "bold"),
-    legend.key = element_rect(color = "black") # Add black outline to legend keys
+    legend.text = element_text(size = 14, face = "bold"),
+    legend.key = element_rect(color = "black"), # Add black outline to legend keys
+    legend.direction  = "horizontal",
+    legend.key.width  = unit(0.9, "cm") 
+    # legend.key.width  = unit(0.8, "cm"),         # wider keys
+    # legend.spacing.x     = unit(3.2, "cm"),       # space between entries
+    # legend.margin        = margin(t = 5, r = 5, b = 5, l = 5)  # outer margin
   ) +
   guides(
     fill = guide_legend(
+      nrow = 1, # Single row for legend
+      byrow = TRUE, # Fill by row
+      label.theme = element_text(margin = margin(l= 8, r = 30, unit = "pt")),  # space after each label
       override.aes = list(alpha = 0.7, color = "black") # Apply transparency in legend
     )
   )
@@ -173,9 +189,10 @@ activity_classification_plots_4CH <- function(P_ID = "T001", isSave = F, file_su
       fill = Activity4
     ), alpha = my.alpha) +
     geom_line(aes(group = subDC), color = "red", linewidth = 0.5, na.rm = T) +
-    scale_x_datetime(date_breaks = "2 hour", date_labels = "%H") +
+    scale_x_datetime(date_breaks = "4 hour", date_labels = "%H") +
     labs(title = "HR [BPM]", x = "Time [h]", y = "") +
-    scale_fill_manual(values = alpha(activity_colors, 1), "", drop = FALSE) + # legend title = ""
+    scale_fill_manual(values = alpha(activity_colors, 1), name = "", 
+                      guide = guide_legend(nrow = 1), drop = FALSE) + # legend title = ""
     my_theme1 +
     theme(
       strip.background = element_blank(),
@@ -205,9 +222,10 @@ activity_classification_plots_4CH <- function(P_ID = "T001", isSave = F, file_su
     ), alpha = my.alpha) +
     geom_line(aes(group = subDC), color = "blue", linewidth = 0.5) +
     ylim(ylim.min, ylim.max) +
-    scale_x_datetime(date_breaks = "2 hour", date_labels = "%H") +
+    scale_x_datetime(date_breaks = "4 hour", date_labels = "%H") +
     labs(title = "Speed [km/h]", y = "", x = "Time [h]") +
-    scale_fill_manual(values = alpha(activity_colors, 1)) +
+    scale_fill_manual(values = alpha(activity_colors, 1), name = "", 
+                      guide = guide_legend(nrow = 1), drop = FALSE) + # legend title = ""
     my_theme1 +
     theme(
       strip.background = element_blank(),
@@ -235,9 +253,10 @@ activity_classification_plots_4CH <- function(P_ID = "T001", isSave = F, file_su
     ), alpha = my.alpha) +
     geom_line(aes(group = subDC), color = "black", linewidth = 0.5) +
     ylim(ylim.min, ylim.max) +
-    scale_fill_manual(values = alpha(activity_colors, 1)) +
+    scale_fill_manual(values = alpha(activity_colors, 1), name = "", 
+                      guide = guide_legend(nrow = 1), drop = FALSE) + # legend title = ""
     scale_color_manual(labels = activity_names) +
-    scale_x_datetime(date_breaks = "2 hour", date_labels = "%H") +
+    scale_x_datetime(date_breaks = "4 hour", date_labels = "%H") +
     labs(title = "Cadence [CPM]", y = "", x = "Time [h]") +
     my_theme1 +
     theme(
@@ -267,9 +286,11 @@ activity_classification_plots_4CH <- function(P_ID = "T001", isSave = F, file_su
       fill = Activity4
     ), alpha = my.alpha) +
     geom_line(aes(group = subDC), color = "red", linewidth = 0.5) +
-    scale_fill_manual(values = alpha(activity_colors, 1)) +
+    ylim(ylim.min, ylim.max) +
+    scale_fill_manual(values = alpha(activity_colors, 1), name = "", 
+                      guide = guide_legend(nrow = 1), drop = FALSE) + # legend title = ""
     scale_color_manual(labels = activity_names) +
-    scale_x_datetime(date_breaks = "2 hour", date_labels = "%H") +
+    scale_x_datetime(date_breaks = "4 hour", date_labels = "%H") +
     labs(title = "SNS Index", y = "", x = "Time [h]") +
     my_theme1 +
     theme(
@@ -292,7 +313,7 @@ activity_classification_plots_4CH <- function(P_ID = "T001", isSave = F, file_su
 
   figure <- ggarrange(activity_legend, figure,
     ncol = 1, nrow = 2, common.legend = FALSE,
-    heights = c(0.2, 1)
+    heights = c(0.1, 1)
   )
 
   # title of the plot
@@ -310,7 +331,7 @@ activity_classification_plots_4CH <- function(P_ID = "T001", isSave = F, file_su
   }
 
   if (isSave) {
-    full_path <- paste0("../figures/Activity4_Visualization_5min/", P_ID, "_4CH_Activity_Classification.jpeg")
+    full_path <- paste0("../figures/Activity4_Visualization_5min/", P_ID, "_4CH_Activity_Classification.pdf")
     # full_path
     ggsave(full_path, final_ann_figure, width = 20, height = 9, units = "in", dpi = 300)
     print(sprintf("%s saved to: %s", P_ID, full_path))
@@ -390,7 +411,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
     scale_fill_manual(values = alpha(mycolors_stress, 0.9)) +
     geom_histogram(position = "dodge", binwidth = 1) +
     facet_wrap(~ Participant + Day, ncol = 3) +
-    my_theme1 +
+    my_theme2 +
     scale_x_continuous(breaks = seq(-10, 40, by = 10)) +
     # ylim(0,20)+ # only for T005
     theme(
@@ -398,7 +419,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
       strip.background = element_rect(fill = "white", color = "black"), # Set background color
       strip.text = element_text(color = "black") # Set facet text color if needed
     ) +
-    labs(x = TeX(r'(\textit{NHR} \[BPM\])'), y = "Frequency") +
+    labs(x = TeX(r'(\textit{$NHR_{D}$} \[BPM\])'), y = "Frequency") +
     geom_vline(aes(xintercept = NHR_0_2SD), color = "blue", linetype = 3, linewidth = 1)
 
   # plot a2 - qq plots for HR_Normalized
@@ -407,7 +428,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
     ggplot(aes(sample = HR_Normalized)) +
     geom_qq() +
     stat_qq_line(color = "red") +
-    my_theme1 +
+    my_theme2 +
     labs(x = "Theoretical Quantiles", y = "Sample Quantiles") +
     facet_wrap(~ Participant + Day, ncol = 3) +
     theme(legend.position = "none") +
@@ -418,7 +439,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
     )
 
   plot_stress_label <- cowplot::plot_grid(plot_stress_distr, plot_stress_qq,
-    label_size = 8,
+    label_size = 12,
     labels = c("a1", "a2"), ncol = 1, nrow = 2
   )
 
@@ -430,7 +451,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
     scale_fill_manual(values = alpha(mycolors_stress, 0.9)) +
     geom_histogram(position = "dodge", binwidth = 0.1) +
     facet_wrap(~ Participant + Day, ncol = 3) +
-    my_theme1 +
+    my_theme2 +
     scale_x_continuous(breaks = seq(-10, 20, by = 5)) +
     theme(
       legend.position = "none",
@@ -445,7 +466,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
     ggplot(aes(sample = SNSindex)) +
     geom_qq() +
     stat_qq_line(color = "red") +
-    my_theme1 +
+    my_theme2 +
     labs(x = "Theoretical Quantiles", y = "Sample Quantiles") +
     facet_wrap(~ Participant + Day, ncol = 3) +
     theme(
@@ -455,7 +476,7 @@ viz_Stress_Label <- function(P_ID = "T001", isSave = FALSE) {
 
 
   plot_sns_stress_label <- cowplot::plot_grid(plot_sns_stress_distr, plot_sns_stress_qq,
-    label_size = 8,
+    label_size = 12,
     labels = c("b1", "b2"), ncol = 1, nrow = 2
   )
 
@@ -536,6 +557,7 @@ viz_Stress_Label("T025", isSave = TRUE)
 # }
 # dev.off()
 
+my_theme2 = my_theme1 # make viz_Stress_Label labels bigger in combined plots
 
 ### Combine Activity and Stress label plots in a page per subject
 pdf_file <- paste0(plot_dir, "Activity-Stress-Label-Plots.pdf")
@@ -555,3 +577,4 @@ for (Participant in P_list) {
   print(combine_plots)
 }
 dev.off()
+
